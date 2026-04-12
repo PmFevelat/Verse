@@ -3,7 +3,7 @@ import { auth } from "@/lib/firebase";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  const user = auth.currentUser;
+  const user = auth?.currentUser;
   if (!user) return { "Content-Type": "application/json" };
 
   const token = await user.getIdToken();

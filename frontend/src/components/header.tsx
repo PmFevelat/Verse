@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,8 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
+import { logout } from "@/lib/auth-actions";
 
 const productItems = [
   {
@@ -42,9 +44,81 @@ const productItems = [
   },
 ];
 
+function UserAvatar() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  if (!user) return null;
+
+  const initials = (user.displayName ?? user.email ?? "?")
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const photoURL = user.photoURL;
+
+  async function handleLogout() {
+    setMenuOpen(false);
+    await logout();
+    router.push("/");
+  }
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setMenuOpen((o) => !o)}
+        className="flex size-7 items-center justify-center overflow-hidden rounded-full bg-gray-900 text-[11px] font-semibold text-white ring-2 ring-transparent transition-all hover:ring-gray-300 focus:outline-none"
+        aria-label="Account menu"
+      >
+        {photoURL ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoURL} alt={user.displayName ?? ""} className="size-full object-cover" />
+        ) : (
+          initials
+        )}
+      </button>
+
+      {menuOpen && (
+        <>
+          <div className="absolute right-0 top-9 z-50 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="border-b border-gray-100 px-3 py-2">
+              <p className="truncate text-xs font-medium text-gray-900">
+                {user.displayName ?? "My account"}
+              </p>
+              <p className="truncate text-[11px] text-gray-500">{user.email}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Sign out
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-300 bg-[#fafafa]/95 backdrop-blur-sm">
@@ -114,16 +188,24 @@ export function Header() {
         {/* Droite — CTAs desktop, menu mobile */}
         <div className="flex flex-1 items-center justify-end gap-3">
           <div className="hidden items-center gap-2 md:flex">
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-[0.8rem]" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button
-              size="sm"
-              className="h-7 bg-gray-900 px-3 text-[0.8rem] text-white hover:bg-gray-800"
-              asChild
-            >
-              <Link href="/signup">Get Started</Link>
-            </Button>
+            {!loading && (
+              user ? (
+                <UserAvatar />
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-[0.8rem]" asChild>
+                    <Link href="/login">Login</Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 bg-gray-900 px-3 text-[0.8rem] text-white hover:bg-gray-800"
+                    asChild
+                  >
+                    <Link href="/signup">Get Started</Link>
+                  </Button>
+                </>
+              )
+            )}
           </div>
           <button
             className="rounded-md p-2 text-gray-500 md:hidden"
@@ -161,16 +243,29 @@ export function Header() {
             Pricing
           </Link>
           <div className="mt-4 flex flex-col gap-2">
-            <Button variant="outline" size="sm" asChild className="w-full">
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button
-              size="sm"
-              className="w-full bg-gray-900 text-white hover:bg-gray-800"
-              asChild
-            >
-              <Link href="/signup">Get Started</Link>
-            </Button>
+            {user ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={async () => { setMobileOpen(false); await logout(); }}
+              >
+                Sign out
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" asChild className="w-full">
+                  <Link href="/login">Login</Link>
+                </Button>
+                <Button
+                  size="sm"
+                  className="w-full bg-gray-900 text-white hover:bg-gray-800"
+                  asChild
+                >
+                  <Link href="/signup">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
