@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Filter, LayoutGrid, Search } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -66,10 +73,18 @@ function countByApp() {
   return map;
 }
 
+const galleryToolbarClass =
+  "flex h-11 shrink-0 items-center gap-2 border-b border-gray-300 px-4";
+
+/** Courbe type « ease-out » un peu amortie pour le panneau directory */
+const directoryPanelEase = "cubic-bezier(0.33, 1, 0.68, 1)";
+const directoryPanelDuration = "500ms";
+
 export function GalleryPreview() {
   const [categoryId, setCategoryId] = useState<string>("all");
   const [appId, setAppId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [directoryOpen, setDirectoryOpen] = useState(true);
 
   const categoryCounts = useMemo(() => countByCategory(), []);
   const appCounts = useMemo(() => countByApp(), []);
@@ -87,10 +102,34 @@ export function GalleryPreview() {
   return (
     <div className="flex h-[min(783px,78vh)] w-full min-h-0 flex-col md:h-[783px] md:flex-row">
       {/* Directory — gauche (aligné côté logo / réf. Tailark) */}
-      <aside className="flex max-h-[min(220px,34vh)] min-h-0 shrink-0 flex-col border-b border-gray-300 bg-[#f9fafb] md:h-full md:max-h-none md:w-[280px] md:border-r md:border-b-0">
-        <div className="flex shrink-0 items-center gap-2 border-b border-gray-300 px-4 py-3.5">
-          <Filter className="size-4 text-gray-500" aria-hidden />
-          <span className="text-xs font-semibold tracking-wide text-gray-700 uppercase">Directory</span>
+      <aside
+        aria-hidden={!directoryOpen}
+        className={cn(
+          "flex min-h-0 shrink-0 flex-col overflow-hidden border-gray-300 bg-[#f9fafb] motion-reduce:transition-none md:h-full md:min-w-0 md:border-r md:border-b-0",
+          "max-md:transition-[max-height,border-color] md:transition-[width,border-color]",
+          directoryOpen
+            ? "pointer-events-auto max-h-[min(220px,34vh)] border-b md:max-h-none md:w-[280px]"
+            : "pointer-events-none max-h-0 border-b-0 md:max-h-none md:w-0 md:border-r-0"
+        )}
+        style={{
+          transitionDuration: directoryPanelDuration,
+          transitionTimingFunction: directoryPanelEase,
+        }}
+      >
+        <div className={cn(galleryToolbarClass, "justify-between")}>
+          <div className="flex min-w-0 items-center gap-2">
+            <Filter className="size-4 shrink-0 text-gray-500" aria-hidden />
+            <span className="text-xs font-semibold tracking-wide text-gray-700 uppercase">Directory</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDirectoryOpen(false)}
+            className="shrink-0 rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-200/80 hover:text-gray-800"
+            aria-label="Replier le directory"
+          >
+            <ChevronUp className="size-4 md:hidden" aria-hidden />
+            <PanelLeftClose className="size-4 max-md:hidden" aria-hidden />
+          </button>
         </div>
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-3 py-4">
@@ -169,10 +208,34 @@ export function GalleryPreview() {
 
       {/* Feed — droite : grille dense type Tailark (cartes petites, 3 colonnes) */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-white">
-        <div className="flex shrink-0 items-center gap-2 border-b border-gray-300 px-4 py-3">
+        <div className={galleryToolbarClass}>
+          {/* Desktop : réouverture à gauche (sidebar horizontale), avec -me-2 quand replié pour ne pas décaler la recherche. */}
+          <span
+            className={cn(
+              "max-md:hidden shrink-0 overflow-hidden motion-reduce:transition-none",
+              "transition-[width,margin-inline-end,opacity]",
+              directoryOpen
+                ? "pointer-events-none w-0 min-w-0 opacity-0 -me-2"
+                : "w-9 opacity-100"
+            )}
+            style={{
+              transitionDuration: directoryPanelDuration,
+              transitionTimingFunction: directoryPanelEase,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setDirectoryOpen(true)}
+              className="flex size-9 items-center justify-center rounded-md text-gray-500 transition-colors motion-reduce:transition-none hover:bg-gray-100 hover:text-gray-800"
+              aria-label="Afficher le directory"
+              tabIndex={directoryOpen ? -1 : 0}
+            >
+              <PanelLeftOpen className="size-4" aria-hidden />
+            </button>
+          </span>
           <div className="relative min-w-0 flex-1">
             <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400"
+              className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-gray-400"
               aria-hidden
             />
             <input
@@ -180,16 +243,33 @@ export function GalleryPreview() {
               placeholder="Search screens…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/80 pl-10 pr-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-colors focus:border-gray-300 focus:bg-white focus:ring-2 focus:ring-gray-900/5"
+              className="h-8 w-full rounded-lg border border-gray-200 bg-gray-50/80 pl-8 pr-2.5 text-xs text-gray-900 placeholder:text-gray-400 outline-none transition-colors focus:border-gray-300 focus:bg-white focus:ring-2 focus:ring-gray-900/5"
             />
           </div>
-          <button
-            type="button"
-            className="hidden shrink-0 rounded-lg border border-gray-200 bg-white p-2 text-gray-500 shadow-sm hover:bg-gray-50 sm:inline-flex"
-            aria-label="Grid view"
+          {/* Mobile : même côté que le toggle du header Directory (à droite), y compris quand le panneau est fermé. */}
+          <span
+            className={cn(
+              "md:hidden shrink-0 overflow-hidden motion-reduce:transition-none",
+              "transition-[width,margin-inline-start,opacity]",
+              directoryOpen
+                ? "pointer-events-none w-0 min-w-0 opacity-0 -ms-2"
+                : "w-9 opacity-100"
+            )}
+            style={{
+              transitionDuration: directoryPanelDuration,
+              transitionTimingFunction: directoryPanelEase,
+            }}
           >
-            <LayoutGrid className="size-4" />
-          </button>
+            <button
+              type="button"
+              onClick={() => setDirectoryOpen(true)}
+              className="flex size-9 items-center justify-center rounded-md text-gray-500 transition-colors motion-reduce:transition-none hover:bg-gray-100 hover:text-gray-800"
+              aria-label="Afficher le directory"
+              tabIndex={directoryOpen ? -1 : 0}
+            >
+              <ChevronDown className="size-4" aria-hidden />
+            </button>
+          </span>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
