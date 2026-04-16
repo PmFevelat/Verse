@@ -33,7 +33,7 @@ export function AuthScreenShell({
   return (
     <div
       className={cn(
-        "flex min-h-svh flex-col bg-[#f9fafb] px-4 py-10 text-foreground",
+        "flex min-h-svh flex-col bg-[#fafafa] px-4 py-10 text-foreground",
         className,
       )}
     >

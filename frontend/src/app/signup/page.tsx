@@ -65,7 +65,7 @@ export default function SignupPage() {
       if (isNewUser) {
         router.push("/onboarding");
       } else {
-        router.push("/");
+        router.push("/dashboard/gallery");
       }
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";

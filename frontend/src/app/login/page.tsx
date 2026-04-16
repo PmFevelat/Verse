@@ -62,7 +62,7 @@ export default function LoginPage() {
       }
 
       await createVerifiedSession(credential.user);
-      router.push("/");
+      router.push("/dashboard/gallery");
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       setError(parseFirebaseError(code));
@@ -101,7 +101,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/");
+      router.push("/dashboard/gallery");
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
       setError(parseFirebaseError(code));

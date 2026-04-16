@@ -44,7 +44,7 @@ export default function OnboardingPage() {
       if (!user) throw new Error("No active session.");
 
       await finaliseGoogleSignup(user, displayName.trim());
-      router.push("/");
+      router.push("/dashboard/gallery");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

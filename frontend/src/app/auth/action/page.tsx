@@ -61,7 +61,7 @@ export default function AuthActionPage() {
   }, [mode, oobCode]);
 
   return (
-    <div className="flex min-h-svh flex-col bg-[#f9fafb] px-4 py-10">
+    <div className="flex min-h-svh flex-col bg-[#fafafa] px-4 py-10">
       <div className="flex flex-1 flex-col items-center justify-center">
         <div className="w-full max-w-[380px] space-y-6 text-left">
           <Link

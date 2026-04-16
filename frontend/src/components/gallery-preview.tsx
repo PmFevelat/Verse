@@ -79,6 +79,28 @@ const galleryToolbarClass =
 /** Courbe type « ease-out » un peu amortie pour le panneau directory */
 const directoryPanelEase = "cubic-bezier(0.33, 1, 0.68, 1)";
 const directoryPanelDuration = "500ms";
+const PHONE_SCREEN_ASPECT = "aspect-[9/16]";
+
+function AppLogoTile({
+  appName,
+  className,
+}: {
+  appName: string;
+  className?: string;
+}) {
+  const initial = appName.trim().slice(0, 1).toUpperCase() || "?";
+  return (
+    <div
+      className={cn(
+        "flex size-7 shrink-0 items-center justify-center rounded-md bg-gray-200/90 text-[11px] font-bold text-gray-700",
+        className,
+      )}
+      aria-hidden
+    >
+      {initial}
+    </div>
+  );
+}
 
 export function GalleryPreview() {
   const [categoryId, setCategoryId] = useState<string>("all");
@@ -273,43 +295,56 @@ export function GalleryPreview() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+          <div
+            className={cn(
+              "grid content-start [justify-content:center]",
+              "gap-x-3 gap-y-7 min-[720px]:gap-x-4 min-[720px]:gap-y-9",
+              "[grid-template-columns:repeat(auto-fill,minmax(min(100%,132px),min(100%,168px)))]",
+              "min-[640px]:[grid-template-columns:repeat(auto-fill,minmax(min(100%,148px),min(100%,168px)))]",
+              "min-[900px]:[grid-template-columns:repeat(auto-fill,minmax(min(100%,168px),min(100%,168px)))]",
+            )}
+          >
             {filtered.map((screen) => (
-              <article
+              <div
                 key={screen.id}
-                className="group overflow-hidden rounded-xl border border-gray-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.1)]"
+                className="flex w-full max-w-[168px] flex-col gap-1.5 justify-self-start"
               >
-                <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://picsum.photos/seed/verve-${screen.imageId}/480/360`}
-                    alt=""
-                    className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="space-y-1 p-2.5 sm:p-3">
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="truncate text-[10px] font-medium tracking-wide text-gray-400 uppercase">
-                      {screen.app}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "h-5 shrink-0 border-0 px-1.5 text-[10px] font-semibold",
-                        screen.license === "pro"
-                          ? "bg-blue-50 text-blue-700"
-                          : "bg-gray-100 text-gray-600"
-                      )}
-                    >
-                      {screen.license === "pro" ? "Pro" : "Free"}
-                    </Badge>
+                <article className="group relative cursor-pointer overflow-hidden rounded-lg transition-all duration-150 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_0_0_2px_rgba(99,102,241,0.25),0_4px_12px_-4px_rgba(0,0,0,0.1)]">
+                  <div className={cn(PHONE_SCREEN_ASPECT, "w-full overflow-hidden bg-gray-100")}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://picsum.photos/seed/verve-${screen.categoryId}-${screen.imageId}/360/640`}
+                      alt=""
+                      className="size-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
                   </div>
-                  <h3 className="line-clamp-2 text-xs font-medium leading-snug text-gray-900 sm:text-[13px]">
-                    {screen.title}
-                  </h3>
+                </article>
+                <div className="flex w-full items-start justify-between gap-2 pt-1.5">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <AppLogoTile appName={screen.app} className="size-6 text-[10px]" />
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] font-semibold text-gray-900">
+                        {screen.app}
+                      </p>
+                      <p className="truncate text-[10px] text-gray-500">
+                        {screen.title}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "h-5 shrink-0 border-0 px-1.5 text-[10px] font-semibold",
+                      screen.license === "pro"
+                        ? "bg-blue-50 text-blue-700"
+                        : "bg-gray-100 text-gray-600"
+                    )}
+                  >
+                    {screen.license === "pro" ? "Pro" : "Free"}
+                  </Badge>
                 </div>
-              </article>
+              </div>
             ))}
           </div>
           {filtered.length === 0 ? (
